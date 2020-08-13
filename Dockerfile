@@ -1,11 +1,23 @@
-# use a node base image
+FROM jenkins/jenkins:lts
 
-FROM node:7-onbuild
+USER root
 
-LABEL mainter "sureshpawar86@gmail.com"
+RUN apt-get update && \
+apt-get -y install apt-transport-https \
+     ca-certificates \
+     curl \
+     gnupg2 \
+     software-properties-common && \
+curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg > /tmp/dkey; apt-key add /tmp/dkey && \
+add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
+   $(lsb_release -cs) \
+   stable" && \
+apt-get update && \
+apt-get -y install docker-ce
 
-HEALTCHECK --interval=5s \ 
-           --timeout=5s \
-           CMD curl -f http://127.0.0.1:8000 || exit 1 
+RUN apt-get install -y docker-ce
 
-EXPOSE 8000
+RUN usermod -a -G docker jenkins
+
+USER jenkins
